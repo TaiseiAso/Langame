@@ -2,3 +2,7 @@ __pycache__/
 api_key.yml
 input.txt
 target.txt
+input_.txt
+target_.txt
+encoder.pth
+decoder.pth

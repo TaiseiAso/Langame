@@ -6,10 +6,11 @@
 
 import pygame
 from pygame.locals import *
+from ai import AI
 import sys
 
 
-class Key():
+class Key:
     def __init__(self):
         self.press = []
         self.update()
@@ -26,7 +27,8 @@ class Key():
                 pygame.quit()
                 sys.exit()
 
-class Text():
+
+class Text:
     def __init__(self):
         self.font = pygame.font.SysFont("hg正楷書体pro", 50)
 
@@ -34,7 +36,8 @@ class Text():
         text = self.font.render(str, True, (255,255,255))
         screen.blit(text, dest)
 
-class User():
+
+class User:
     def __init__(self, key):
         self.init_message()
         self.key = key
@@ -104,7 +107,7 @@ class User():
         self.text.draw(screen, self.ja_mes + self.en_mes, [20,20])
 
 
-class Game():
+class Game:
     def __init__(self, name, size, fps):
         pygame.init()
         pygame.display.set_mode(size, 0, 32)
@@ -112,13 +115,15 @@ class Game():
         self.screen = pygame.display.get_surface()
         self.key = Key()
         self.user = User(self.key)
+        self.ai = AI("ai_config.yml")
+        self.ai.prepare_test()
         self.fps = fps
 
     def input(self):
         self.key.update()
         message = self.user.type_message()
         if message:
-            print(message)
+            print(message + " > " + self.ai.test(message))
 
     def draw(self):
         self.screen.fill((0,0,0,0))

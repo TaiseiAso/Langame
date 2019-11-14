@@ -14,7 +14,7 @@ import MeCab
 
 
 class QueueListener(StreamListener):
-    def __init__(self, api_key):
+    def __init__(self, api_key, twitter_config):
         super(QueueListener, self).__init__()
         self.queue = []
         self.batch_size = 100
@@ -23,6 +23,7 @@ class QueueListener(StreamListener):
         self.auth = OAuthHandler(cfg_auth['consumer_key'], cfg_auth['consumer_secret'])
         self.auth.set_access_token(cfg_auth['access_token'], cfg_auth['access_token_secret'])
         self.api = tweepy.API(self.auth)
+        self.path = twitter_config['path']
         self.tagger = MeCab.Tagger('-Ochasen')
 
     def on_error(self, status):
@@ -67,8 +68,8 @@ class QueueListener(StreamListener):
         return True
 
     def dump(self):
-        with open("input.txt", 'a', encoding='utf-8') as f_inp, \
-        open("target.txt", 'a', encoding='utf-8') as f_tar:
+        with open(self.path['inp'], 'a', encoding='utf-8') as f_inp, \
+        open(self.path['tar'], 'a', encoding='utf-8') as f_tar:
             (sids, texts), self.queue = zip(*self.queue), []
             while True:
                 try:
@@ -82,6 +83,8 @@ class QueueListener(StreamListener):
                 if self.check(pair[0]) and self.check(pair[1]):
                     inp = self.del_morpheme(self.normalize(pair[0]))
                     tar = self.del_morpheme(self.normalize(pair[1]))
+                    if inp == "" or tar == "":
+                        continue
                     if self.check_punctuation(inp) and self.check_punctuation(tar):
                         inp = self.del_punctuation(inp)
                         tar = self.del_punctuation(tar)
@@ -113,7 +116,7 @@ class QueueListener(StreamListener):
         text = re.sub("！(\s*！)+", "！", text)
         text = re.sub("\?+", "？", text)
         text = re.sub("？(\s*？)+", "？", text)
-        text = re.sub("～(\s*～)+|ー(\s*ー)+", "ー", text)
+        text = re.sub("～(\s*～)*|ー(\s*ー)+", "ー", text)
         text = re.sub("\r\n|\n|\r", "。", text)
         text += "。"
         text = re.sub("[、。](\s*[、。])+", "。", text)
@@ -180,9 +183,10 @@ class QueueListener(StreamListener):
 if __name__ == '__main__':
     tcpip_delay = 0.25
     api_key = yaml.load(stream=open("api_key.yml", 'rt', encoding='utf-8'), Loader=yaml.SafeLoader)
+    twitter_config = yaml.load(stream=open("twitter_config.yml", 'rt', encoding='utf-8'), Loader=yaml.SafeLoader)
     while True:
         try:
-            listener = QueueListener(api_key)
+            listener = QueueListener(api_key, twitter_config)
             stream = Stream(listener.auth, listener)
             stream.filter(languages=["ja"], track=['。', '、', '！', '？', '私', '俺', '(', ')'])
         except KeyboardInterrupt:
