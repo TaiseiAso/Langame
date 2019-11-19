@@ -25,6 +25,7 @@ class QueueListener(StreamListener):
         self.api = tweepy.API(self.auth)
         self.path = twitter_config['path']
         self.tagger = MeCab.Tagger('-Ochasen')
+        self.tagger.parse("")
 
     def on_error(self, status):
         print("ON ERROR: ", status)
@@ -86,15 +87,15 @@ class QueueListener(StreamListener):
                     if inp == "" or tar == "":
                         continue
                     if self.check_punctuation(inp) and self.check_punctuation(tar):
-                        inp = self.del_punctuation(inp)
-                        tar = self.del_punctuation(tar)
+                        inp = self.katakana_to_hiragana(self.del_punctuation(inp))
+                        tar = self.katakana_to_hiragana(self.del_punctuation(tar))
                         if self.check_length(inp) and self.check_length(tar):
-                            f_inp.write(self.katakana_to_hiragana(inp) + '\n')
-                            f_tar.write(self.katakana_to_hiragana(tar) + '\n')
+                            f_inp.write(inp + '\n')
+                            f_tar.write(tar + '\n')
                             self.cnt += 1
 
     def del_username(self, text):
-        return re.sub("(^|\s)(@|＠)(\w+)", '', text)
+        return re.sub("(^|\s)(@|＠)(\w+)", "", text)
 
     def check(self, text):
         if re.compile("((ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&amp;%@!&#45;\/]))?)").search(text):
@@ -106,7 +107,7 @@ class QueueListener(StreamListener):
         return True
 
     def normalize(self, text):
-        text = re.sub("\(.*\)", " ", text)
+        text = re.sub("\(.*?\)", " ", text)
         text = re.sub("[^ぁ-んァ-ヶｧ-ｳﾞ一-龠々ー～〜、。！？!?,，.．\r\n]", " ", text)
         text = re.sub("[,，]", "、", text)
         text = re.sub("[．.]", "。", text)
@@ -142,7 +143,8 @@ class QueueListener(StreamListener):
                 continue
             if node.surface not in ["ノ", "ーノ", "ロ", "艸", "屮", "罒", "灬", "彡", "ヮ", "益",\
             "皿", "タヒ", "厂", "厂厂", "啞", "卍", "ノノ", "ノノノ", "ノシ", "ノツ",\
-            "癶", "癶癶", "乁", "乁厂", "マ", "んご", "んゴ", "ンゴ", "にき", "ニキ", "ナカ", "み", "ミ"]:
+            "癶", "癶癶", "乁", "乁厂", "マ", "んご", "んゴ", "ンゴ", "にき", "ニキ", "ナカ", "み", "ミ",\
+            "笑", "泣"]:
                 if len(feature) >= 8:
                     morphemes += feature[7]
                 else:
@@ -157,27 +159,31 @@ class QueueListener(StreamListener):
     def del_punctuation(self, text):
         return re.sub("。", "", text)
 
-    def check_length(self, text):
-        return 3 <= len(text) and len(text) <= 15
-
     def katakana_to_hiragana(self, text):
+        if text == "":
+            return ""
         text_ = ""
         i = 0
         while True:
-            if "ァ" <= text[i] <= "ン":
+            if 'ァ' <= text[i] <= 'ン':
                 text_ += chr(ord(text[i]) - 96)
-            elif text[i] == "ヴ":
-                if "ァ" <= text[i+1] <= "ォ":
+            elif text[i] == 'ヴ':
+                if i < len(text)-1 and 'ァ' <= text[i+1] <= 'ォ':
                     i += 1
-                    text_ += chr(ord("ば") + 3*((ord(text[i]) - ord("ァ"))//2))
+                    text_ += chr(ord('ば') + 3*((ord(text[i]) - ord('ァ'))//2))
                 else:
-                    text_ += "ブ"
-            else:
+                    text_ += 'ブ'
+            elif 'ぁ' <= text[i] <= 'ん' or text[i] in ['！','？','、','ー']:
                 text_ += text[i]
+            else:
+                return ""
             i += 1
             if i == len(text):
                 break
         return text_
+
+    def check_length(self, text):
+        return 3 <= len(text) <= 15
 
 
 if __name__ == '__main__':

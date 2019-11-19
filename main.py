@@ -2,7 +2,7 @@
 
 
 # https://support.microsoft.com/ja-jp/help/883232
-
+# https://qiita.com/abcsupergt/items/08a1c2df03a5d4c10539
 
 import pygame
 from pygame.locals import *
@@ -22,7 +22,8 @@ class Key:
                 self.press.append(event.key)
                 self.push.append(event.key)
             elif event.type == KEYUP:
-                self.press.remove(event.key)
+                if event.key in self.press:
+                    self.press.remove(event.key)
             elif event.type == QUIT:
                 pygame.quit()
                 sys.exit()
@@ -95,7 +96,7 @@ class User:
         for key_id in self.key.push:
             if key_id == K_BACKSPACE:
                 self.backspace()
-            elif key_id in list(range(K_a, K_z+1)) + [K_1, K_SLASH, K_COMMA, K_MINUS]:
+            elif K_a <= key_id <= K_z or key_id in [K_1, K_SLASH, K_COMMA, K_MINUS]:
                 self.add_character(chr(key_id))
             elif key_id == K_RETURN:
                 if self.check_message():
