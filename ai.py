@@ -161,7 +161,7 @@ class AI:
             h = self.encoder.init_hidden(nbatch).to(self.device)
             for inp in batch_inp:
                 h_ = h
-                vec = torch.eye(self.dim)[inp]
+                vec = torch.eye(self.dim)[inp].to(self.device)
                 h = self.encoder(vec, h, nbatch)
                 mask = self.create_mask(inp).to(self.device)
                 h = torch.where(mask == 0, h_, h)
@@ -169,7 +169,7 @@ class AI:
             inp = [self.word_to_id['>']]*nbatch
             loss = 0
             for tar in batch_tar:
-                vec = torch.eye(self.dim)[inp]
+                vec = torch.eye(self.dim)[inp].to(self.device)
                 out, h = self.decoder(vec, h, nbatch)
                 loss += criterion(out, torch.LongTensor(tar).to(self.device))
                 inp = tar
@@ -214,9 +214,9 @@ class AI:
         ids = [self.word_to_id[word] for word in inp if word in self.word_to_id]
         ids.reverse()
 
-        h = self.encoder.init_hidden()
+        h = self.encoder.init_hidden().to(self.device)
         for id in ids:
-            vec = torch.eye(self.dim)[id]
+            vec = torch.eye(self.dim)[id].to(self.device)
             h = self.encoder(vec, h)
 
         test_config = self.config['test']
@@ -230,7 +230,7 @@ class AI:
             next_sequences = []
 
             for score, sentence, id, h, length in sequences:
-                vec = torch.eye(self.dim)[id]
+                vec = torch.eye(self.dim)[id].to(self.device)
                 out, h = self.decoder(vec, h)
                 topv, topi = out.topk(beam_search)
 

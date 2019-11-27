@@ -7,6 +7,7 @@
 import pygame
 from pygame.locals import *
 from ai import AI
+from match import Match
 import sys
 
 
@@ -43,18 +44,19 @@ class User:
         self.init_message()
         self.key = key
         self.text = Text()
-        self.load_romaji()
+        self.romaji = self.load_romaji()
 
     def load_romaji(self):
-        self.romaji = []
+        romaji = []
         with open("romaji.txt", 'r', encoding='utf-8') as f:
             line = f.readline()
             while line:
                 line = line.strip()
                 alphabets, hiragana = line.split(':')
                 for alphabet in alphabets.split('^'):
-                    self.romaji.append((alphabet, hiragana))
+                    romaji.append((alphabet, hiragana))
                 line = f.readline()
+        return romaji
 
     def init_message(self):
         self.ja_mes = ""
@@ -118,13 +120,18 @@ class Game:
         self.user = User(self.key)
         self.ai = AI("ai_config.yml")
         self.ai.prepare_test()
+        self.match = Match()
         self.fps = fps
 
     def input(self):
         self.key.update()
         message = self.user.type_message()
         if message:
-            print(message + " > " + self.ai.test(message))
+            action = self.match.judge_action(message)
+            if action >= 0:
+                print("action: " + str(action))
+            else:
+                print(message + " > " + self.ai.test(message))
 
     def draw(self):
         self.screen.fill((0,0,0,0))

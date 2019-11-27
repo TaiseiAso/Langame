@@ -2,10 +2,8 @@
 
 
 import yaml
-import os
 import json
 import re
-import time
 import unicodedata
 import tweepy
 from tweepy import OAuthHandler, Stream
