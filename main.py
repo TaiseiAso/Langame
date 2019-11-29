@@ -7,7 +7,8 @@
 import pygame
 from pygame.locals import *
 from ai import AI
-from match import Match
+from src import *
+import yaml
 import sys
 
 
@@ -40,15 +41,15 @@ class Text:
 
 
 class User:
-    def __init__(self, key):
+    def __init__(self, key, romaji_path):
         self.init_message()
         self.key = key
         self.text = Text()
-        self.romaji = self.load_romaji()
+        self.romaji = self.load_romaji(romaji_path)
 
-    def load_romaji(self):
+    def load_romaji(self, romaji_path):
         romaji = []
-        with open("romaji.txt", 'r', encoding='utf-8') as f:
+        with open(romaji_path, 'r', encoding='utf-8') as f:
             line = f.readline()
             while line:
                 line = line.strip()
@@ -107,20 +108,23 @@ class User:
         return message
 
     def draw(self, screen):
-        self.text.draw(screen, self.ja_mes + self.en_mes, [20,20])
+        self.text.draw(screen, self.ja_mes + self.en_mes, [20,500])
 
 
 class Game:
     def __init__(self, name, size, fps):
+        data_config = yaml.load(stream=open("config/data_config.yml", 'rt', encoding='utf-8'), Loader=yaml.SafeLoader)
+        data_path = data_config['path']
         pygame.init()
         pygame.display.set_mode(size, 0, 32)
         pygame.display.set_caption(name)
         self.screen = pygame.display.get_surface()
         self.key = Key()
-        self.user = User(self.key)
-        self.ai = AI("ai_config.yml")
+        self.user = User(self.key, data_path['romaji'])
+        self.ai = AI("config/ai_config.yml")
         self.ai.prepare_test()
-        self.match = Match()
+        self.match = Match(data_path['pattern'], data_path['synonym'])
+        self.field = Field(size, data_path['map'], data_path['ground_param'], data_path['object_param'])
         self.fps = fps
 
     def input(self):
@@ -135,6 +139,7 @@ class Game:
 
     def draw(self):
         self.screen.fill((0,0,0,0))
+        self.field.draw(self.screen)
         self.user.draw(self.screen)
         pygame.display.update()
 
@@ -149,5 +154,5 @@ class Game:
 
 
 if __name__ == "__main__":
-    game = Game("LANGAME DUNGEON", (800,400), 30)
+    game = Game("LANGAME DUNGEON", (800,600), 30)
     game.play()

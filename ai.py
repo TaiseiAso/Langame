@@ -266,7 +266,7 @@ class AI:
 
 
 if __name__ == '__main__':
-    args = get_option('train', 'ai_config.yml')
+    args = get_option('train', 'config/ai_config.yml')
     ai = AI(args.config)
     if args.mode == 'train':
         ai.train()

@@ -1,0 +1,3 @@
+path:
+    inp     : "data/corpus/input.txt"
+    tar     : "data/corpus/target.txt"

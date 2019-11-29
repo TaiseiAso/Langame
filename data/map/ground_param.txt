@@ -1,0 +1,9 @@
+# ground_id: comment
+# 0: flat ground
+# 1: water surface
+# 2: wall
+
+# ground_id: walkable
+0:1
+1:0
+2:0

@@ -1,8 +1,8 @@
 path:
-    inp     : "input.txt"
-    tar     : "target.txt"
-    encoder : "encoder.pth"
-    decoder : "decoder.pth"
+    inp     : "data/corpus/input.txt"
+    tar     : "data/corpus/target.txt"
+    encoder : "data/model/encoder.pth"
+    decoder : "data/model/decoder.pth"
 
 cuda: 0
 

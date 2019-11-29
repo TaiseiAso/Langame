@@ -1,0 +1,5 @@
+# object_id: comment
+# 0: stone
+
+# object_id: walkable
+0:0

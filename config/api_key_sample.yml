@@ -1,0 +1,6 @@
+# Please create new file "api_key.yml"
+twitter_API:
+  consumer_key        : -----
+  consumer_secret     : -----
+  access_token        : -----
+  access_token_secret : -----

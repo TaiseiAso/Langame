@@ -1,6 +1,2 @@
 __pycache__/
-api_key.yml
-input.txt
-target.txt
-encoder.pth
-decoder.pth
+config/api_key.yml
