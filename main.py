@@ -1,146 +1,64 @@
 # coding: utf-8
 
 
-# https://support.microsoft.com/ja-jp/help/883232
-# https://qiita.com/abcsupergt/items/08a1c2df03a5d4c10539
-
 import pygame
-from pygame.locals import *
 from ai import AI
 from src import *
 import yaml
 import sys
 
 
-class Key:
-    def __init__(self):
-        self.press = []
-        self.update()
-
-    def update(self):
-        self.push = []
-        for event in pygame.event.get():
-            if event.type == KEYDOWN:
-                self.press.append(event.key)
-                self.push.append(event.key)
-            elif event.type == KEYUP:
-                if event.key in self.press:
-                    self.press.remove(event.key)
-            elif event.type == QUIT:
-                pygame.quit()
-                sys.exit()
-
-
-class Text:
-    def __init__(self):
-        self.font = pygame.font.SysFont("hg正楷書体pro", 50)
-
-    def draw(self, screen, str, dest):
-        text = self.font.render(str, True, (255,255,255))
-        screen.blit(text, dest)
-
-
-class User:
-    def __init__(self, key, romaji_path):
-        self.init_message()
-        self.key = key
-        self.text = Text()
-        self.romaji = self.load_romaji(romaji_path)
-
-    def load_romaji(self, romaji_path):
-        romaji = []
-        with open(romaji_path, 'r', encoding='utf-8') as f:
-            line = f.readline()
-            while line:
-                line = line.strip()
-                alphabets, hiragana = line.split(':')
-                for alphabet in alphabets.split('^'):
-                    romaji.append((alphabet, hiragana))
-                line = f.readline()
-        return romaji
-
-    def init_message(self):
-        self.ja_mes = ""
-        self.en_mes = ""
-
-    def check_message(self):
-        return self.ja_mes != "" and self.en_mes == ""
-
-    def print_message(self):
-        print(self.ja_mes + self.en_mes)
-
-    def backspace(self):
-        if self.en_mes == "":
-            self.ja_mes = self.ja_mes[:-1]
-        else:
-            self.en_mes = self.en_mes[:-1]
-
-    def add_character(self, ch):
-        if len(self.ja_mes) >= 12:
-            return
-
-        if self.en_mes == "n" and ch not in ['a','i','u','e','o','y','n']:
-            self.ja_mes += "ん"
-            self.en_mes = ch
-            return
-
-        next_mes = self.en_mes + ch
-        for alphabet, hiragana in self.romaji:
-            if next_mes == alphabet[:len(next_mes)]:
-                if len(next_mes) == len(alphabet):
-                    self.ja_mes += hiragana
-                    self.en_mes = ""
-                else:
-                    self.en_mes = next_mes
-                break
-
-    def type_message(self):
-        message = None
-        for key_id in self.key.push:
-            if key_id == K_BACKSPACE:
-                self.backspace()
-            elif K_a <= key_id <= K_z or key_id in [K_1, K_SLASH, K_COMMA, K_MINUS]:
-                self.add_character(chr(key_id))
-            elif key_id == K_RETURN:
-                if self.check_message():
-                    message = self.ja_mes
-                    self.init_message()
-        return message
-
-    def draw(self, screen):
-        self.text.draw(screen, self.ja_mes + self.en_mes, [20,500])
-
-
 class Game:
     def __init__(self, name, size, fps):
         data_config = yaml.load(stream=open("config/data_config.yml", 'rt', encoding='utf-8'), Loader=yaml.SafeLoader)
         data_path = data_config['path']
+
         pygame.init()
         pygame.display.set_mode(size, 0, 32)
         pygame.display.set_caption(name)
         self.screen = pygame.display.get_surface()
+
+        self.sceneManager = SceneManager(self.screen, 40)
+        self.imageDict = self.loadImage(data_path['img'])
+
         self.key = Key()
-        self.user = User(self.key, data_path['romaji'])
+        self.user = User(self.screen, self.imageDict, self.key, data_path['font'], data_path['romaji'])
         self.ai = AI("config/ai_config.yml")
         self.ai.prepare_test()
-        self.match = Match(data_path['pattern'], data_path['synonym'])
-        self.field = Field(size, data_path['map'], data_path['ground_param'], data_path['object_param'])
+        #self.match = Match(data_path['pattern'], data_path['synonym'])
+
         self.fps = fps
 
-    def input(self):
+        title = Title(self.screen, self.sceneManager, self.imageDict, self.ai, data_path['font'], data_path['text'])
+        self.scenes = [title]
+
+    def loadImage(self, img_path):
+        imageDict = {}
+        imageDict['title'] = pygame.image.load(img_path + "title.png")
+        imageDict['chara'] = pygame.image.load(img_path + "chara.png")
+        imageDict['window'] = pygame.image.load(img_path + "window.png")
+        return imageDict
+
+    def update(self):
         self.key.update()
         message = self.user.type_message()
-        if message:
-            action = self.match.judge_action(message)
-            if action >= 0:
-                print("action: " + str(action))
-            else:
-                print(message + " > " + self.ai.test(message))
+        self.scenes[self.sceneManager.scene_id].update(message)
+        move_flag = self.sceneManager.update()
+        if move_flag:
+            self.scenes[self.sceneManager.scene_id].init()
+
+        #if message:
+        #    action = self.match.judge_action(message)
+        #    if action >= 0:
+        #        print("action: " + str(action))
+        #    else:
+        #        print(message + " > " + self.ai.test(message))
 
     def draw(self):
-        self.screen.fill((0,0,0,0))
-        self.field.draw(self.screen)
-        self.user.draw(self.screen)
+        self.screen.fill((230,230,230))
+        self.scenes[self.sceneManager.scene_id].draw()
+        self.sceneManager.draw()
+        self.user.draw()
         pygame.display.update()
 
     def wait(self):
@@ -148,7 +66,7 @@ class Game:
 
     def play(self):
         while True:
-            self.input()
+            self.update()
             self.draw()
             self.wait()
 

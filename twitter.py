@@ -166,7 +166,7 @@ class QueueListener(StreamListener):
             if 'ァ' <= text[i] <= 'ン':
                 text_ += chr(ord(text[i]) - 96)
             elif text[i] == 'ヴ':
-                if i < len(text)-1 and 'ァ' <= text[i+1] <= 'ォ':
+                if i < len(text)-1 and text[i+1] in ['ァ','ィ','ゥ','ェ','ォ']:
                     i += 1
                     text_ += chr(ord('ば') + 3*((ord(text[i]) - ord('ァ'))//2))
                 else:
@@ -186,8 +186,8 @@ class QueueListener(StreamListener):
 
 if __name__ == '__main__':
     tcpip_delay = 0.25
-    api_key = yaml.load(stream=open("api_key.yml", 'rt', encoding='utf-8'), Loader=yaml.SafeLoader)
-    twitter_config = yaml.load(stream=open("twitter_config.yml", 'rt', encoding='utf-8'), Loader=yaml.SafeLoader)
+    api_key = yaml.load(stream=open("config/api_key.yml", 'rt', encoding='utf-8'), Loader=yaml.SafeLoader)
+    twitter_config = yaml.load(stream=open("config/twitter_config.yml", 'rt', encoding='utf-8'), Loader=yaml.SafeLoader)
     while True:
         try:
             listener = QueueListener(api_key, twitter_config)

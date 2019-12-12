@@ -1,7 +1,7 @@
 path:
-    pattern     : "data/system/pattern.txt"
-    romaji      : "data/system/romaji.txt"
-    synonym     : "data/system/synonym.txt"
-    map         : "data/map/edit.txt"
-    ground_param: "data/map/ground_param.txt"
-    object_param: "data/map/object_param.txt"
+    pattern : "data/system/pattern.txt"
+    romaji  : "data/system/romaji.txt"
+    synonym : "data/system/synonym.txt"
+    font    : "data/font/07LogoTypeGothic7.ttf"
+    img     : "data/img/"
+    text    : "data/text/"
