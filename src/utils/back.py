@@ -6,33 +6,31 @@ from .text import Text
 
 
 class Hiragana:
-    def __init__(self, screen, font_path):
-        self.screen = screen
-        _, _, self.width, self.height = screen.get_rect()
-        self.text = Text(screen, font_path)
+    def __init__(self, font_path):
+        self.text = Text(font_path)
 
         self.str = chr(random.randint(ord('ぁ'), ord('ん')))
         self.size = random.randint(12, 60)
-        self.pos = [random.randint(0, self.width - self.size), -self.size]
+        self.pos = [random.random(), -self.size]
         col = max(30, 230 - self.size)
         self.color = (col, col, col)
         self.spd = 0.5 + (self.size-12)/48
-        self.out = False
 
     def update(self):
         self.pos[1] += self.spd
-        if self.pos[1] > self.height:
-            self.out = True
 
-    def draw(self):
-        self.text.draw(self.str, self.pos, self.size, color=self.color, bold=True)
+    def draw(self, screen):
+        width = screen.get_rect()[2]
+        self.text.draw(screen, self.str,
+            (self.pos[0]*(self.size + width)-self.size,self.pos[1]),
+            self.size, color=self.color, bold=True)
 
 
 class Back:
-    def __init__(self, screen, font_path, interval):
-        self.screen = screen
+    def __init__(self, font_path, interval, height):
         self.font_path = font_path
         self.interval = interval
+        self.height = height
         self.init()
 
     def init(self):
@@ -45,7 +43,7 @@ class Back:
             if i == len(self.hiragana_list):
                 break
             self.hiragana_list[i].update()
-            if self.hiragana_list[i].out:
+            if self.hiragana_list[i].pos[1] > self.height:
                 self.hiragana_list.pop(i)
             else:
                 i += 1
@@ -53,7 +51,7 @@ class Back:
         self.t += 1
         if self.t == self.interval:
             self.t = 0
-            new_hiragana = Hiragana(self.screen, self.font_path)
+            new_hiragana = Hiragana(self.font_path)
             for i, hiragana in enumerate(self.hiragana_list):
                 if new_hiragana.size < hiragana.size:
                     self.hiragana_list.insert(i, new_hiragana)
@@ -61,6 +59,6 @@ class Back:
             else:
                 self.hiragana_list.append(new_hiragana)
 
-    def draw(self):
+    def draw(self, screen):
         for hiragana in self.hiragana_list:
-            hiragana.draw()
+            hiragana.draw(screen)

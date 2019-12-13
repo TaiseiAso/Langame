@@ -7,13 +7,11 @@ from .text import Text
 
 
 class Balloon:
-    def __init__(self, screen, imageDict, font_path, text_interval):
-        self.screen = screen
+    def __init__(self, imageDict, font_path, text_interval):
         self.imageDict = imageDict
-        self.text = Text(screen, font_path)
+        self.text = Text(font_path)
         self.text_interval = text_interval
         self.set_message("")
-        self.set_parameter(vec=0, size=32, pos=(0,0))
 
     def set_message(self, message):
         self.message = message
@@ -24,68 +22,6 @@ class Balloon:
         self.mes_pop_num = 0
         self.t = 0
 
-    def set_parameter(self, vec=None, size=None, pos=None):
-        if vec is not None:
-            self.vec = vec
-        if size is not None:
-            self.size = size
-        if pos is not None:
-            self.pos = pos
-
-        if vec is not None or size is not None:
-            self.make_scaling_vec_chip()
-        if size is not None:
-            self.make_scaling_chip()
-
-    def make_scaling_vec_chip(self):
-        temp = pygame.Surface((32,32), SRCALPHA)
-        if self.vec == 1:
-            temp.blit(self.imageDict['window'], (0,0), (0,64,32,32))
-        elif self.vec == 2:
-            temp.blit(self.imageDict['window'], (0,0), (32,64,32,32))
-        elif self.vec == 3:
-            temp.blit(self.imageDict['window'], (0,0), (64,64,32,32))
-        elif self.vec == 4:
-            temp.blit(self.imageDict['window'], (0,0), (96,64,32,32))
-        self.arrow = pygame.transform.scale(temp, (self.size,self.size))
-
-    def make_scaling_chip(self):
-        temp = pygame.Surface((32,32), SRCALPHA)
-        temp.blit(self.imageDict['window'], (0,0), (96,32,32,32))
-        self.up_left = pygame.transform.scale(temp, (self.size,self.size))
-
-        temp = pygame.Surface((32,32), SRCALPHA)
-        temp.blit(self.imageDict['window'], (0,0), (64,32,32,32))
-        self.bottom_left = pygame.transform.scale(temp, (self.size,self.size))
-
-        temp = pygame.Surface((32,32), SRCALPHA)
-        temp.blit(self.imageDict['window'], (0,0), (0,32,32,32))
-        self.up_right = pygame.transform.scale(temp, (self.size,self.size))
-
-        temp = pygame.Surface((32,32), SRCALPHA)
-        temp.blit(self.imageDict['window'], (0,0), (32,32,32,32))
-        self.bottom_right = pygame.transform.scale(temp, (self.size,self.size))
-
-        temp = pygame.Surface((32,32), SRCALPHA)
-        temp.blit(self.imageDict['window'], (0,0), (0,0,32,32))
-        self.up = pygame.transform.scale(temp, (self.size,self.size))
-
-        temp = pygame.Surface((32,32), SRCALPHA)
-        temp.blit(self.imageDict['window'], (0,0), (64,0,32,32))
-        self.bottom = pygame.transform.scale(temp, (self.size,self.size))
-
-        temp = pygame.Surface((32,32), SRCALPHA)
-        temp.blit(self.imageDict['window'], (0,0), (96,0,32,32))
-        self.left = pygame.transform.scale(temp, (self.size,self.size))
-
-        temp = pygame.Surface((32,32), SRCALPHA)
-        temp.blit(self.imageDict['window'], (0,0), (32,0,32,32))
-        self.right = pygame.transform.scale(temp, (self.size,self.size))
-
-        temp = pygame.Surface((32,32), SRCALPHA)
-        temp.blit(self.imageDict['window'], (0,0), (0,96,32,32))
-        self.body = pygame.transform.scale(temp, (self.size,self.size))
-
     def update(self):
         if self.mes_pop_num < self.mes_len:
             self.t += 1
@@ -93,52 +29,53 @@ class Balloon:
                 self.t = 0
                 self.mes_pop_num += 1
 
-    def draw(self):
-        width = self.size*(self.mes_width+1)
-        height = self.size*(self.mes_height+1)
+    def draw(self, screen, vec, pos, size):
+        width = 32*(self.mes_width + 1)
+        height = 32*(self.mes_height + 1)
+        temp = pygame.Surface((width+32,height+32), SRCALPHA)
 
-        if self.vec == 0:
-            first_pos = self.pos
-        elif self.vec == 1:
-            first_pos = [
-                self.pos[0] - width//2,
-                self.pos[1]]
-        elif self.vec == 2:
-            first_pos = [
-                self.pos[0] - width,
-                self.pos[1] - height//2]
-        elif self.vec == 3:
-            first_pos = [
-                self.pos[0] - width//2,
-                self.pos[1] - height]
+        temp.blit(self.imageDict['window'], (0,0), (96,32,32,32))
+        temp.blit(self.imageDict['window'], (0,height), (64,32,32,32))
+        temp.blit(self.imageDict['window'], (width,height), (32,32,32,32))
+        temp.blit(self.imageDict['window'], (width,0), (0,32,32,32))
+
+        for w in range(32,width,32):
+            temp.blit(self.imageDict['window'], (w,0), (0,0,32,32))
+            temp.blit(self.imageDict['window'], (w,height), (64,0,32,32))
+
+        for h in range(32,height,32):
+            temp.blit(self.imageDict['window'], (0,h), (96,0,32,32))
+            temp.blit(self.imageDict['window'], (width,h), (32,0,32,32))
+            for w in range(32,width,32):
+                temp.blit(self.imageDict['window'], (w,h), (0,96,32,32))
+
+        resized_width = size*(self.mes_width + 2)
+        resized_height = size*(self.mes_height + 2)
+
+        if vec == 1:
+            temp.blit(self.imageDict['window'], (width//2,0), (0,64,32,32))
+            put_pos = (pos[0]-resized_width//2, pos[1])
+        elif vec == 2:
+            temp.blit(self.imageDict['window'], (width,height//2), (32,64,32,32))
+            put_pos = (pos[0]-resized_width, pos[1]-resized_height//2)
+        elif vec == 3:
+            temp.blit(self.imageDict['window'], (width//2,height), (64,64,32,32))
+            put_pos = (pos[0]-resized_width//2, pos[1]-resized_height)
+        elif vec == 4:
+            temp.blit(self.imageDict['window'], (0,height//2), (96,64,32,32))
+            put_pos = (pos[0], pos[1]-resized_height//2)
         else:
-            first_pos = [
-                self.pos[0],
-                self.pos[1] - height//2]
-
-        self.screen.blit(self.up_left, first_pos)
-        self.screen.blit(self.bottom_left, (first_pos[0], first_pos[1] + height))
-        self.screen.blit(self.up_right, (first_pos[0] + width, first_pos[1]))
-        self.screen.blit(self.bottom_right, (first_pos[0] + width, first_pos[1] + height))
-
-        for w in range(first_pos[0] + self.size, first_pos[0] + self.size*(self.mes_width+1), self.size):
-            self.screen.blit(self.up, (w, first_pos[1]))
-            self.screen.blit(self.bottom, (w, first_pos[1] + height))
-
-        for h in range(first_pos[1] + self.size, first_pos[1] + self.size*(self.mes_height+1), self.size):
-            self.screen.blit(self.left, (first_pos[0], h))
-            self.screen.blit(self.right, (first_pos[0] + width, h))
-            for w in range(first_pos[0] + self.size, first_pos[0] + self.size*(self.mes_width+1), self.size):
-                self.screen.blit(self.body, (w, h))
-
-        self.screen.blit(self.arrow, self.pos)
+            put_pos = pos
 
         remain_pop = self.mes_pop_num
         for i, mes in enumerate(self.message):
-            text_pos = (first_pos[0] + self.size, first_pos[1] + self.size*(i+1))
+            text_pos = (32,32*(i+1))
             if remain_pop <= len(mes):
-                self.text.draw(mes[:remain_pop], text_pos, self.size)
+                self.text.draw(temp, mes[:remain_pop], text_pos, 32)
                 break
             else:
-                self.text.draw(mes, text_pos, self.size)
+                self.text.draw(temp, mes, text_pos, 32)
                 remain_pop -= len(mes)
+
+        temp = pygame.transform.smoothscale(temp, (resized_width,resized_height))
+        screen.blit(temp, put_pos)

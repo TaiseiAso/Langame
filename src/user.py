@@ -1,18 +1,20 @@
 # coding: utf-8
 
 
+import pygame
 from pygame.locals import *
 from .utils import *
 
 
 class User:
-    def __init__(self, screen, imageDict, key, font_path, romaji_path):
+    def __init__(self, imageDict, key, font_path, romaji_path, max_length, size):
         self.init_message()
-        self.screen = screen
         self.imageDict = imageDict
         self.key = key
-        self.text = Text(screen, font_path)
+        self.text = Text(font_path)
         self.romaji = self.load_romaji(romaji_path)
+        self.max_length = max_length
+        self.size = size
 
     def load_romaji(self, romaji_path):
         romaji = []
@@ -43,7 +45,7 @@ class User:
             self.en_mes = self.en_mes[:-1]
 
     def add_character(self, ch):
-        if len(self.ja_mes) >= 20:
+        if len(self.ja_mes) >= self.max_length:
             return
 
         if self.en_mes == "n" and ch not in ['a','i','u','e','o','y','n']:
@@ -74,16 +76,29 @@ class User:
                     self.init_message()
         return message
 
-    def draw(self):
-        self.screen.blit(self.imageDict['window'], (32,484), (96,32,32,32))
-        self.screen.blit(self.imageDict['window'], (32,516), (96,0,32,32))
-        self.screen.blit(self.imageDict['window'], (32,548), (64,32,32,32))
-        for w in range(64,736,32):
-            self.screen.blit(self.imageDict['window'], (w,484), (0,0,32,32))
-            self.screen.blit(self.imageDict['window'], (w,516), (0,96,32,32))
-            self.screen.blit(self.imageDict['window'], (w,548), (64,0,32,32))
-        self.screen.blit(self.imageDict['window'], (736,484), (0,32,32,32))
-        self.screen.blit(self.imageDict['window'], (736,516), (32,0,32,32))
-        self.screen.blit(self.imageDict['window'], (736,548), (32,32,32,32))
+    def draw(self, screen):
+        temp = pygame.Surface((32*(self.max_length+3),96), SRCALPHA)
 
-        self.text.draw(self.ja_mes + self.en_mes, (64,516), 32)
+        temp.blit(self.imageDict['window'], (0,0), (96,32,32,32))
+        temp.blit(self.imageDict['window'], (0,32), (96,0,32,32))
+        temp.blit(self.imageDict['window'], (0,64), (64,32,32,32))
+
+        right = 32*(self.max_length + 2)
+        for w in range(32,right,32):
+            temp.blit(self.imageDict['window'], (w,0), (0,0,32,32))
+            temp.blit(self.imageDict['window'], (w,32), (0,96,32,32))
+            temp.blit(self.imageDict['window'], (w,64), (64,0,32,32))
+
+        temp.blit(self.imageDict['window'], (right,0), (0,32,32,32))
+        temp.blit(self.imageDict['window'], (right,32), (32,0,32,32))
+        temp.blit(self.imageDict['window'], (right,64), (32,32,32,32))
+
+        self.text.draw(temp, self.ja_mes + self.en_mes, (32,32), 32)
+
+        resized_width = self.size*(self.max_length + 3)
+        temp = pygame.transform.smoothscale(temp, (resized_width,self.size*3))
+
+        _, _, width, height = screen.get_rect()
+        left = max(0, (width - resized_width)//2)
+        up = height - self.size*3 - 20
+        screen.blit(temp, (left,up))

@@ -1,12 +1,18 @@
 # coding: utf-8
 
 
+from enum import Enum
+
+
+class SCENE_ID(Enum):
+    TITLE = 0
+    PLAY = 1
+
+
 class SceneManager:
-    def __init__(self, screen, move_scene_interval):
-        self.screen = screen
-        _, _, self.width, self.height = screen.get_rect()
+    def __init__(self, initial_scene, move_scene_interval):
         self.move_scene_interval = move_scene_interval
-        self.scene_id = 0
+        self.scene_id = initial_scene
         self.move_scene_time = 0
 
     def move_scene(self, next_scene_id):
@@ -22,9 +28,10 @@ class SceneManager:
                 return True
         return False
 
-    def draw(self):
+    def draw(self, screen):
         if self.move_scene_time > 0:
-            d = self.width*self.move_scene_time//self.move_scene_interval
-            left = max(0, d - self.width)
-            right = min(self.width, d)
-            self.screen.fill((20,20,20), (left, 0, right - left, self.height))
+            _, _, width, height = screen.get_rect()
+            d = width*self.move_scene_time//self.move_scene_interval
+            left = max(0, d - width)
+            right = min(width, d)
+            screen.fill((20,20,20), (left, 0, right - left, height))

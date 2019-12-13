@@ -4,7 +4,15 @@
 import pygame
 import sys
 import random
+from enum import Enum
+from .manager import SCENE_ID
 from .utils import *
+
+
+class Flag(Enum):
+    WAIT = 0
+    START = 1
+    END = 2
 
 
 class Title:
@@ -12,10 +20,10 @@ class Title:
         self.screen = screen
         self.sceneManager = sceneManager
         self.imageDict = imageDict
-        self.back = Back(screen, font_path, 15)
-        self.balloon = Balloon(screen, imageDict, font_path, 3)
-        self.balloon.set_parameter(vec=4, size=24, pos=[380,266])
         self.ai = ai
+        self.back = Back(font_path, 15, screen.get_rect()[3])
+        self.balloon = Balloon(imageDict, font_path, 3)
+        self.me = Me(imageDict)
 
         self.title_text = self.load_text(text_path + "title.txt")
         self.start_text = self.load_text(text_path + "start.txt")
@@ -27,10 +35,12 @@ class Title:
     def init(self):
         self.t = 0
         self.wait_time = 0
-        self.flag = 0
+        self.flag = Flag.WAIT
         self.text_id = 0
         self.back.init()
         self.balloon.set_message(self.title_text[self.text_id])
+        self.me.init()
+        self.me.size_ratio = 2
 
     def load_text(self, text_file_path):
         text = []
@@ -45,10 +55,14 @@ class Title:
     def update(self, message):
         self.back.update()
 
+        self.me.update()
+        _, _, width, height = self.screen.get_rect()
+        self.me.pos = [width//2-160, height//2+140]
+
         if self.wait_time == 0:
-            if self.flag == 1:
-                self.sceneManager.move_scene(0)
-            elif self.flag == 2:
+            if self.flag == Flag.START:
+                self.sceneManager.move_scene(SCENE_ID.PLAY)
+            elif self.flag == Flag.END:
                 pygame.quit()
                 sys.exit()
         else:
@@ -70,18 +84,26 @@ class Title:
                     if message == "はじめる":
                         self.balloon.set_message(random.choice(self.start_text))
                         self.wait_time = 60
-                        self.flag = 1
+                        self.flag = Flag.START
+                        self.me.state = State.WALK
+                        self.me.vec = Vec.RIGHT
                     elif message == "おわる":
                         self.balloon.set_message(random.choice(self.end_text))
                         self.wait_time = 60
-                        self.flag = 2
+                        self.flag = Flag.END
+                        self.me.state = State.GOODBY
+                        self.me.vec = Vec.NONE
                     else:
                         res = self.ai.test(message)
                         self.balloon.set_message([res])
                         self.t = 0
 
     def draw(self):
-        self.back.draw()
-        self.screen.blit(self.imageDict['title'], (90,50))
-        self.screen.blit(self.imageDict['chara'], (80,200))
-        self.balloon.draw()
+        self.back.draw(self.screen)
+
+        _, _, width, height = self.screen.get_rect()
+        self.screen.blit(self.imageDict['title'], (max(0, (width - 620)//2), 50))
+        #self.screen.blit(self.imageDict['chara'], (max(0, width//2 - 320), max(150, height//2 - 100)))
+        self.me.draw(self.screen)
+
+        self.balloon.draw(self.screen, 4, (max(310, width//2 - 10),max(230, height//2 - 20)), 24)

@@ -18,11 +18,11 @@ class Game:
         pygame.display.set_caption(name)
         self.screen = pygame.display.get_surface()
 
-        self.sceneManager = SceneManager(self.screen, 40)
+        self.sceneManager = SceneManager(SCENE_ID.TITLE, 40)
         self.imageDict = self.loadImage(data_path['img'])
 
         self.key = Key()
-        self.user = User(self.screen, self.imageDict, self.key, data_path['font'], data_path['romaji'])
+        self.user = User(self.imageDict, self.key, data_path['font'], data_path['romaji'], 20, 32)
         self.ai = AI("config/ai_config.yml")
         self.ai.prepare_test()
         #self.match = Match(data_path['pattern'], data_path['synonym'])
@@ -30,13 +30,16 @@ class Game:
         self.fps = fps
 
         title = Title(self.screen, self.sceneManager, self.imageDict, self.ai, data_path['font'], data_path['text'])
-        self.scenes = [title]
+        play = Play(self.screen, self.sceneManager, self.imageDict, self.ai, data_path['font'])
+        self.scenes = {SCENE_ID.TITLE:title, SCENE_ID.PLAY:play}
 
     def loadImage(self, img_path):
         imageDict = {}
         imageDict['title'] = pygame.image.load(img_path + "title.png")
         imageDict['chara'] = pygame.image.load(img_path + "chara.png")
         imageDict['window'] = pygame.image.load(img_path + "window.png")
+        imageDict['maptcip'] = pygame.image.load(img_path + "maptcip.png")
+        imageDict['me'] = pygame.image.load(img_path + "me.png")
         return imageDict
 
     def update(self):
@@ -57,8 +60,8 @@ class Game:
     def draw(self):
         self.screen.fill((230,230,230))
         self.scenes[self.sceneManager.scene_id].draw()
-        self.sceneManager.draw()
-        self.user.draw()
+        self.sceneManager.draw(self.screen)
+        self.user.draw(self.screen)
         pygame.display.update()
 
     def wait(self):
