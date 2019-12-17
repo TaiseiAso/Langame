@@ -2,6 +2,7 @@
 
 
 import pygame
+from pygame.locals import *
 from ai import AI
 from src import *
 import yaml
@@ -25,12 +26,11 @@ class Game:
         self.user = User(self.imageDict, self.key, data_path['font'], data_path['romaji'], 20, 32)
         self.ai = AI("config/ai_config.yml")
         self.ai.prepare_test()
-        #self.match = Match(data_path['pattern'], data_path['synonym'])
 
         self.fps = fps
 
         title = Title(self.screen, self.sceneManager, self.imageDict, self.ai, data_path['font'], data_path['text'])
-        play = Play(self.screen, self.sceneManager, self.imageDict, self.ai, data_path['font'])
+        play = Play(self.screen, self.sceneManager, self.imageDict, self.ai, data_path['font'], data_path['pattern'], data_path['synonym'])
         self.scenes = {SCENE_ID.TITLE:title, SCENE_ID.PLAY:play}
 
     def loadImage(self, img_path):
@@ -38,7 +38,7 @@ class Game:
         imageDict['title'] = pygame.image.load(img_path + "title.png")
         imageDict['chara'] = pygame.image.load(img_path + "chara.png")
         imageDict['window'] = pygame.image.load(img_path + "window.png")
-        imageDict['maptcip'] = pygame.image.load(img_path + "maptcip.png")
+        imageDict['mapchip'] = pygame.image.load(img_path + "mapchip.png")
         imageDict['me'] = pygame.image.load(img_path + "me.png")
         return imageDict
 
@@ -49,13 +49,6 @@ class Game:
         move_flag = self.sceneManager.update()
         if move_flag:
             self.scenes[self.sceneManager.scene_id].init()
-
-        #if message:
-        #    action = self.match.judge_action(message)
-        #    if action >= 0:
-        #        print("action: " + str(action))
-        #    else:
-        #        print(message + " > " + self.ai.test(message))
 
     def draw(self):
         self.screen.fill((230,230,230))
@@ -75,5 +68,5 @@ class Game:
 
 
 if __name__ == "__main__":
-    game = Game("LANGAME DUNGEON", (800,600), 30)
+    game = Game("LANGAME, Aso Taisei, 2019~", (800,600), 30)
     game.play()

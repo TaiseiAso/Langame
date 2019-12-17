@@ -18,12 +18,18 @@ class Flag(Enum):
 class Title:
     def __init__(self, screen, sceneManager, imageDict, ai, font_path, text_path):
         self.screen = screen
+        _, _, self.width, self.height = self.screen.get_rect()
         self.sceneManager = sceneManager
         self.imageDict = imageDict
         self.ai = ai
-        self.back = Back(font_path, 15, screen.get_rect()[3])
+
+        self.back = Back(font_path, 15, self.height)
+
         self.balloon = Balloon(imageDict, font_path, 3)
+        self.balloon.init(4, [max(310, self.width//2-10),max(230, self.height//2-20)], 24)
+
         self.me = Me(imageDict)
+        self.me.init(State.STOP, 2, [self.width//2-160, self.height//2+140], Vec.NONE, 0)
 
         self.title_text = self.load_text(text_path + "title.txt")
         self.start_text = self.load_text(text_path + "start.txt")
@@ -39,8 +45,6 @@ class Title:
         self.text_id = 0
         self.back.init()
         self.balloon.set_message(self.title_text[self.text_id])
-        self.me.init()
-        self.me.size_ratio = 2
 
     def load_text(self, text_file_path):
         text = []
@@ -52,12 +56,9 @@ class Title:
                 line = f.readline()
         return text
 
-    def update(self, message):
+    def update(self, message=None):
         self.back.update()
-
         self.me.update()
-        _, _, width, height = self.screen.get_rect()
-        self.me.pos = [width//2-160, height//2+140]
 
         if self.wait_time == 0:
             if self.flag == Flag.START:
@@ -91,7 +92,7 @@ class Title:
                         self.balloon.set_message(random.choice(self.end_text))
                         self.wait_time = 60
                         self.flag = Flag.END
-                        self.me.state = State.GOODBY
+                        self.me.state = State.GOODBYE
                         self.me.vec = Vec.NONE
                     else:
                         res = self.ai.test(message)
@@ -100,10 +101,6 @@ class Title:
 
     def draw(self):
         self.back.draw(self.screen)
-
-        _, _, width, height = self.screen.get_rect()
-        self.screen.blit(self.imageDict['title'], (max(0, (width - 620)//2), 50))
-        #self.screen.blit(self.imageDict['chara'], (max(0, width//2 - 320), max(150, height//2 - 100)))
+        self.screen.blit(self.imageDict['title'], (max(0, (self.width - 620)//2), 50))
         self.me.draw(self.screen)
-
-        self.balloon.draw(self.screen, 4, (max(310, width//2 - 10),max(230, height//2 - 20)), 24)
+        self.balloon.draw(self.screen)

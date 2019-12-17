@@ -1,2 +1,4 @@
 __pycache__/
+build/
+dist/
 config/api_key.yml

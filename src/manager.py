@@ -34,4 +34,4 @@ class SceneManager:
             d = width*self.move_scene_time//self.move_scene_interval
             left = max(0, d - width)
             right = min(width, d)
-            screen.fill((20,20,20), (left, 0, right - left, height))
+            screen.fill((20,20,20), (left,0,right-left,height))
